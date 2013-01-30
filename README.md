@@ -4,7 +4,7 @@ Flashcam
 Disclaimer
 ----
 
-Flash recorder made in Adobe Flex.
+Flash audio/video recorder made in Adobe Flex.
 
 Contributing
 ------------
