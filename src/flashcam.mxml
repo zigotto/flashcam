@@ -15,9 +15,12 @@
 			import flash.media.Camera;
 			import mx.controls.Alert;
 				
+			private var rtmp_server:String = "rtmp://localhost/vod";
+
 			// Componente para apresnetar o vídeo
 			private var video:Video;
 			private var cam:Camera;
+			private var nc:NetConnection;
 
 			// Functions
 			public function init(): void {
@@ -25,11 +28,15 @@
 
 				cam = Camera.getCamera();
 
+				nc = new NetConnection();
+				nc.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
+				nc.connect(rtmp_server);
+
 				this.video = new Video();
 				this.video.opaqueBackground=true;
 				this.videoContainer.video = video;
 			}
-			
+
 			private function initCamera(event:Event):void{
 				if (cam != null)
 				{
@@ -51,6 +58,14 @@
 				log(event.code);
 			}
 			
+			private function netStatusHandler(event:NetStatusEvent):void
+			{
+				// This event gets dispatched whether the connection
+				// could be completed or not.
+				trace(event.info.code); // "NetConnection.Connect.Success" or "NetConnection.Connect.Failed"
+				log(event.info.code);
+			}
+
 			public static function log(text: String): void {
 				if (ExternalInterface.available)
 				{
