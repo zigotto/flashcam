@@ -4,6 +4,7 @@
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   xmlns:util="flashcam.ui.*"
 			   initialize="init()"
+			   width="50%" height="50%"
 			   backgroundColor="white">
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
@@ -12,72 +13,25 @@
 	<fx:Script>
 		<![CDATA[
 			// Imports
-			import flash.media.Camera;
-			import mx.controls.Alert;
-				
-			private var rtmp_server:String = "rtmp://localhost/vod";
+			import flashcam.ui.Flashcam;
 
-			// Componente para apresnetar o vídeo
-			private var video:Video;
-			private var cam:Camera;
-			private var nc:NetConnection;
+			private var flcam:Flashcam = new Flashcam();
 
-			// Functions
-			public function init(): void {
-				log("Flashcam initialized!");
-
-				cam = Camera.getCamera();
-
-				nc = new NetConnection();
-				nc.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
-				nc.connect(rtmp_server);
-
-				this.video = new Video();
-				this.video.opaqueBackground=true;
-				this.videoContainer.video = video;
-			}
-
-			private function initCamera(event:Event):void{
-				if (cam != null)
-				{
-					cam.addEventListener(StatusEvent.STATUS, statusHandler);
-					video.attachCamera(cam);
-					addChild(video);
-					videoContainer.video = video;
-					log("Camera plugged in!");
-				} else {
-					log("You don't have a camera!");
-				}
-			}
-			
-			public function statusHandler(event:StatusEvent):void
+			// Flashcam initialization
+			public function init():void
 			{
-				// This event gets dispatched when the user clicks the "Allow" or "Deny"
-				// button in the Flash Player Settings dialog box.
-				trace(event.code); // "Camera.Muted" or "Camera.Unmuted"
-				log(event.code);
-			}
-			
-			private function netStatusHandler(event:NetStatusEvent):void
-			{
-				// This event gets dispatched whether the connection
-				// could be completed or not.
-				trace(event.info.code); // "NetConnection.Connect.Success" or "NetConnection.Connect.Failed"
-				log(event.info.code);
+				flcam.initialize();
 			}
 
-			public static function log(text: String): void {
-				if (ExternalInterface.available)
-				{
-					ExternalInterface.call("console.log", text);
-					mx.controls.Alert.show(text);
-				}
-				return;
+			private function initCamera(event:Event):void
+			{
+				flcam.initializeCamera(event);
+				videoContainer.video = flcam.video;
 			}
 		]]>
 	</fx:Script>
 	
-	<mx:VBox id="box"  horizontalAlign="center" width="100%">
+	<mx:VBox id="box" horizontalAlign="center" width="100%">
 		<util:VideoContainer id="videoContainer" width="320" height="240" creationComplete="initCamera(event)"/>
 	</mx:VBox>
 
