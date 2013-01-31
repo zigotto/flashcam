@@ -2,6 +2,7 @@
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:util="flashcam.ui.*"
 			   initialize="init()"
 			   backgroundColor="white">
 	<fx:Declarations>
@@ -11,25 +12,34 @@
 	<fx:Script>
 		<![CDATA[
 			// Imports
-			import mx.controls.Alert;
 			import flash.media.Camera;
+			import mx.controls.Alert;
 				
+			// Componente para apresnetar o vídeo
+			private var video:Video;
+			private var cam:Camera;
+
 			// Functions
 			public function init(): void {
 				log("Flashcam initialized!");
-				//mx.controls.Alert.show("Testing alert");	
+
+				cam = Camera.getCamera();
+
+				this.video = new Video();
+				this.video.opaqueBackground=true;
+				this.videoContainer.video = video;
 			}
 			
 			private function initCamera(event:Event):void{
-				var cam:Camera = Camera.getCamera();
 				if (cam != null)
 				{
 					cam.addEventListener(StatusEvent.STATUS, statusHandler);
-					var vid:Video = new Video();
-					vid.attachCamera(cam);
-					addChild(vid);
+					video.attachCamera(cam);
+					addChild(video);
+					videoContainer.video = video;
+					log("Camera plugged in!");
 				} else {
-					mx.controls.Alert.show("You don't have a camera!");
+					log("You don't have a camera!");
 				}
 			}
 			
@@ -45,12 +55,15 @@
 				if (ExternalInterface.available)
 				{
 					ExternalInterface.call("console.log", text);
+					mx.controls.Alert.show(text);
 				}
 				return;
 			}
 		]]>
 	</fx:Script>
 	
-	<mx:VideoDisplay id="video" width="640" height="480" creationComplete="initCamera(event)"/>	
+	<mx:VBox id="box"  horizontalAlign="center" width="100%">
+		<util:VideoContainer id="videoContainer" width="320" height="240" creationComplete="initCamera(event)"/>
+	</mx:VBox>
 
 </s:Application>
