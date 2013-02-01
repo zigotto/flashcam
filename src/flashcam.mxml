@@ -25,7 +25,7 @@
 
 			private function initCamera(event:Event):void
 			{
-				videoContainer.video = flcam.video;
+				videoContainer.video = flcam.getVideo();
 				this.recordButton.enabled=true;
 			}
 

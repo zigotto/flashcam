@@ -18,11 +18,11 @@ package flashcam.ui
 		private var rtmp_server:String = "rtmp://localhost/vod";
 		
 		// components to show your video
-		public var video:Video;
-		public var cam:Camera;
-		public var mic:Microphone;
-		public var stream:NetStream;
-		public var connection:NetConnection;
+		private var video:Video;
+		private var cam:Camera;
+		private var mic:Microphone;
+		private var stream:NetStream;
+		private var connection:NetConnection;
 
 		public function Flashcam()
 		{
@@ -38,14 +38,14 @@ package flashcam.ui
 			initializeConnection();
 		}
 		
-		public function initializeConnection():void
+		private function initializeConnection():void
 		{
 			connection = new NetConnection();
 			connection.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
 			connection.connect(rtmp_server);
 		}
 
-		public function initializeCamera():void
+		private function initializeCamera():void
 		{
 			video = new Video();
 			video.opaqueBackground = true;
@@ -63,7 +63,7 @@ package flashcam.ui
 			}
 		}
 
-		public function initializeMicrophone():void
+		private function initializeMicrophone():void
 		{
 			mic = Microphone.getMicrophone();
 			mic.setUseEchoSuppression(true);
@@ -79,7 +79,7 @@ package flashcam.ui
 			}
 		}
 		
-		public function statusHandler(event:StatusEvent):void
+		private function statusHandler(event:StatusEvent):void
 		{
 			// This event gets dispatched when the user clicks the "Allow" or "Deny"
 			// button in the Flash Player Settings dialog box.
@@ -141,6 +141,11 @@ package flashcam.ui
 
 			stream.play("test");
 			video.attachNetStream(stream);
+		}
+
+		public function getVideo():Video
+		{
+			return video;
 		}
 	}
 }
