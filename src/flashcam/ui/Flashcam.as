@@ -1,14 +1,16 @@
 package flashcam.ui
 {
 	// Imports
-	import flash.events.Event;
 	import flash.events.NetStatusEvent;
 	import flash.events.StatusEvent;
 	import flash.external.ExternalInterface;
 	import flash.media.Camera;
+	import flash.media.Microphone;
 	import flash.media.Video;
 	import flash.net.NetConnection;
-	// import mx.controls.Alert;
+	import flash.net.NetStream;
+
+	//import mx.controls.Alert;
 	
 	public class Flashcam
 	{	
@@ -17,9 +19,10 @@ package flashcam.ui
 		
 		// components to show your video
 		public var video:Video;
-
-		private var cam:Camera;
-		private var nc:NetConnection;
+		public var cam:Camera;
+		public var mic:Microphone;
+		public var stream:NetStream;
+		public var connection:NetConnection;
 
 		public function Flashcam()
 		{
@@ -29,24 +32,26 @@ package flashcam.ui
 		public function initialize():void
 		{
 			log("Flashcam initialized");
-						
-			video = new Video();
-			video.opaqueBackground = true;
-			
-			cam = Camera.getCamera();
-			
+
+			initializeCamera();
+			initializeMicrophone();
 			initializeConnection();
 		}
 		
 		public function initializeConnection():void
 		{
-			nc = new NetConnection();
-			nc.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
-			nc.connect(rtmp_server);			
+			connection = new NetConnection();
+			connection.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
+			connection.connect(rtmp_server);
 		}
 
-		public function initializeCamera(event:Event):void
+		public function initializeCamera():void
 		{
+			video = new Video();
+			video.opaqueBackground = true;
+
+			cam = Camera.getCamera();
+
 			if (cam != null)
 			{
 				cam.addEventListener(StatusEvent.STATUS, statusHandler);
@@ -55,6 +60,22 @@ package flashcam.ui
 				log("Camera plugged in!");
 			} else {
 				log("You don't have a camera!");
+			}
+		}
+
+		public function initializeMicrophone():void
+		{
+			mic = Microphone.getMicrophone();
+			mic.setUseEchoSuppression(true);
+			mic.setSilenceLevel(0);
+
+			if (mic != null)
+			{
+				mic.addEventListener(StatusEvent.STATUS, onMicStatus);
+
+				log("Microphone plugged in!");
+			} else {
+				log("You don't have a microphone!");
 			}
 		}
 		
@@ -74,13 +95,52 @@ package flashcam.ui
 			log(event.info.code);
 		}
 		
-		private static function log(text: String):void
+		private function onMicStatus(event:StatusEvent):void
+		{
+			if (event.code == "Microphone.Unmuted")
+			{
+				log("Microphone access was allowed.");
+			}
+			else if (event.code == "Microphone.Muted")
+			{
+				log("Microphone access was denied.");
+			}
+		}
+
+		private static function log(text:String):void
 		{
 			if (ExternalInterface.available) {
 				ExternalInterface.call("console.log", text);
 				// mx.controls.Alert.show(text);
 			}
 			return;
+		}
+
+		// video streaming
+		public function recordStart():void
+		{
+			log("record: start;");
+
+			stream = new NetStream(connection);
+			stream.attachAudio(mic);
+			stream.attachCamera(cam);
+			stream.publish("test","record");
+
+			video.attachCamera(cam);
+		}
+		public function recordStop():void
+		{
+			log("record: stop;");
+
+			stream.close();
+			video.attachCamera(null);
+		}
+		public function recordPlay():void
+		{
+			log("record: play;");
+
+			stream.play("test");
+			video.attachNetStream(stream);
 		}
 	}
 }

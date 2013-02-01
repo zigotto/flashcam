@@ -25,14 +25,44 @@
 
 			private function initCamera(event:Event):void
 			{
-				flcam.initializeCamera(event);
 				videoContainer.video = flcam.video;
+				this.recordButton.enabled=true;
+			}
+
+			/**
+			 * Starts recording
+			 */
+			private function startRecording():void {
+				this.recordButton.enabled=false;
+				this.stopButton.enabled=true;
+
+				flcam.recordStart();
+			}
+
+			/**
+			 * Stop recording
+			 */
+			private function stopRecording():void {
+				this.recordButton.enabled=true;
+				this.stopButton.enabled=false;
+				this.playButton.enabled=true;
+
+				flcam.recordStop();
+			}
+
+			private function playRecording():void {
+				flcam.recordPlay();
 			}
 		]]>
 	</fx:Script>
 	
 	<mx:VBox id="box" horizontalAlign="center" width="100%">
 		<util:VideoContainer id="videoContainer" width="320" height="240" creationComplete="initCamera(event)"/>
+		<mx:HBox bottom="10" right="10" >
+			<mx:Button id="recordButton" label="Record" fontSize="18" fontWeight="bold" enabled="false" click="startRecording()"/>
+			<mx:Button id="stopButton" label="Stop" fontSize="18" fontWeight="bold" enabled="false" click="stopRecording()" />
+			<mx:Button id="playButton" label="Play" fontSize="18" fontWeight="bold" enabled="false" click="playRecording()" />
+		</mx:HBox>
 	</mx:VBox>
 
 </s:Application>
