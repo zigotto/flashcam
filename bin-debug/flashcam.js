@@ -14,6 +14,7 @@
 			$('#'+opts.id).html(opts.noFlashFound); // inject no flash found message
 
 			// forward incoming flash movie calls to outgoing functions
+			$.flashcam.FC_onError = data.onError;
 			$.flashcam.FC_showPrompt = data.showPrompt;
 
 			var newWidth = opts.width;
@@ -52,6 +53,10 @@
 })(jQuery);
 
 // incoming functions (calls coming from flash) - must be public and forward calls to the flashcam plugin
+
+function FC_onError(errorId, errorMsg) {
+	$.flashcam.FC_onError(errorId, errorMsg);
+}
 
 function FC_showPrompt() {
 	$.flashcam.FC_showPrompt();

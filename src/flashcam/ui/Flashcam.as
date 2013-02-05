@@ -83,6 +83,17 @@ package flashcam.ui
 			if (this.cam != null)
 			{
 				this.configureH264();
+				
+				this.cam.setKeyFrameInterval(15);
+				this.cam.setQuality(0, 90);
+				this.cam.setLoopback(false);
+				
+				log("Camera: Bandwidth: " + this.cam.bandwidth.toString());
+				log("Camera: Current FPS: " + this.cam.currentFPS.toString());
+				log("Camera: FPS: " + this.cam.fps.toString());
+				log("Camera: Keyframe Interval: " + this.cam.keyFrameInterval.toString());
+				log("Camera: Quality: " + this.cam.quality.toString());
+
 				this.cam.addEventListener(StatusEvent.STATUS, this.statusHandler);
 				this.video.attachCamera(this.cam);
 
@@ -100,9 +111,9 @@ package flashcam.ui
 			this.h264Settings = new H264VideoStreamSettings();
 			this.h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3);
 			this.h264Settings.setKeyFrameInterval(15);
-			this.h264Settings.setQuality(90000, 90);
+			this.h264Settings.setQuality(0, 90);
 			this.h264Settings.setMode(this.video.videoWidth, this.video.videoHeight, -1);
-
+			
 			log("h264Settings: Video codec used for compression: " + this.h264Settings.codec);
 			log("h264Settings: Level used for H.264/AVC encoding: " + this.h264Settings.level);
 			log("h264Settings: Profile used for H.264/AVC encoding: " + this.h264Settings.profile);
@@ -156,15 +167,6 @@ package flashcam.ui
 			}
 		}
 
-		public static function log(text:String):void
-		{
-			if (ExternalInterface.available) {
-				ExternalInterface.call("console.log", text);
-				// mx.controls.Alert.show(text);
-			}
-			return;
-		}
-
 		// video streaming
 		public function recordStart():void
 		{
@@ -207,6 +209,26 @@ package flashcam.ui
 		public function flashcamVersion():String
 		{
 			return this.version;
+		}
+
+		public static function log(text:String):void
+		{
+			if (ExternalInterface.available)
+			{
+				ExternalInterface.call("console.log", text);
+			}
+			return;
+		}
+
+		private static function showError(id:Number, text:String):void
+		{
+			log(text);
+
+			if (ExternalInterface.available)
+			{
+				ExternalInterface.call("FC_onError", id, text);
+			}
+			return;
 		}
 	}
 }
