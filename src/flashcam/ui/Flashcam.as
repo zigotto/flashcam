@@ -2,6 +2,7 @@ package flashcam.ui
 {
 
 	// Imports
+	import flash.system.Capabilities;
 	import flash.events.NetStatusEvent;
 	import flash.events.StatusEvent;
 	import flash.external.ExternalInterface;
@@ -18,6 +19,8 @@ package flashcam.ui
 
 	public class Flashcam
 	{	
+		private var version:String = "0.0.1";
+		
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
 		//private var rtmp_server:String = "rtmp://177.71.245.129:1935/vod";
@@ -34,16 +37,30 @@ package flashcam.ui
 
 		public function Flashcam()
 		{
-			log("Flashcam created");
+			log("Flashcam (" + this.flashcamVersion() + ") created");
 		}
 
 		public function initialize():void
 		{
 			log("Flashcam initialized");
 
+			var flashPlayerType:String;
+			if (Capabilities.isDebugger)
+			{
+				flashPlayerType;
+			}
+			else
+			{
+				flashPlayerType;
+			}
+			log(flashPlayerType + " " + Capabilities.playerType + " (" + Capabilities.version + ")");
+			
 			initializeCamera();
 			initializeMicrophone();
 			initializeConnection();
+			
+			log("Adding ExternalInterface");
+			ExternalInterface.addCallback("FC_version", this.flashcamVersion);
 		}
 
 		private function initializeConnection():void
@@ -70,6 +87,7 @@ package flashcam.ui
 				this.video.attachCamera(this.cam);
 
 				log("Camera plugged in!");
+				ExternalInterface.call("FC_showPrompt");
 			} else {
 				log("You don't have a camera!");
 			}
@@ -184,6 +202,11 @@ package flashcam.ui
 		public function getVideo():Video
 		{
 			return this.video;
+		}
+		
+		public function flashcamVersion():String
+		{
+			return this.version;
 		}
 	}
 }
