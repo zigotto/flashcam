@@ -1,34 +1,42 @@
 package flashcam.ui
 {
+
 	// Imports
 	import flash.events.NetStatusEvent;
 	import flash.events.StatusEvent;
 	import flash.external.ExternalInterface;
 	import flash.media.Camera;
+	import flash.media.H264Level;
+	import flash.media.H264Profile;
+	import flash.media.H264VideoStreamSettings;
 	import flash.media.Microphone;
 	import flash.media.Video;
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
 
 	//import mx.controls.Alert;
-	
+
 	public class Flashcam
 	{	
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
-		
+		//private var rtmp_server:String = "rtmp://177.71.245.129:1935/vod";
+
 		// components to show your video
+		private var video_url:String = "mp4:interview.f4v";
 		private var video:Video;
 		private var cam:Camera;
 		private var mic:Microphone;
 		private var stream:NetStream;
 		private var connection:NetConnection;
 
+		private var h264Settings:H264VideoStreamSettings;
+
 		public function Flashcam()
 		{
 			log("Flashcam created");
 		}
-		
+
 		public function initialize():void
 		{
 			log("Flashcam initialized");
@@ -37,41 +45,64 @@ package flashcam.ui
 			initializeMicrophone();
 			initializeConnection();
 		}
-		
+
 		private function initializeConnection():void
 		{
-			connection = new NetConnection();
-			connection.addEventListener(NetStatusEvent.NET_STATUS,netStatusHandler);
-			connection.connect(rtmp_server);
+			this.connection = new NetConnection();
+			this.connection.addEventListener(NetStatusEvent.NET_STATUS, this.netStatusHandler);
+			this.connection.client = this;
+			this.connection.connect(this.rtmp_server);
+
+			log("Connected: " + this.connection.connected);
 		}
 
 		private function initializeCamera():void
 		{
-			video = new Video();
-			video.opaqueBackground = true;
+			this.video = new Video();
+			this.video.opaqueBackground = true;
 
-			cam = Camera.getCamera();
+			this.cam = Camera.getCamera();
 
-			if (cam != null)
+			if (this.cam != null)
 			{
-				cam.addEventListener(StatusEvent.STATUS, statusHandler);
-				video.attachCamera(cam);
-				
+				this.configureH264();
+				this.cam.addEventListener(StatusEvent.STATUS, this.statusHandler);
+				this.video.attachCamera(this.cam);
+
 				log("Camera plugged in!");
 			} else {
 				log("You don't have a camera!");
 			}
 		}
 
+		private function configureH264():void
+		{
+			log("Init H264 encoder");
+
+			this.h264Settings = new H264VideoStreamSettings();
+			this.h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3);
+			this.h264Settings.setKeyFrameInterval(15);
+			this.h264Settings.setQuality(90000, 90);
+			this.h264Settings.setMode(this.video.videoWidth, this.video.videoHeight, -1);
+
+			log("h264Settings: Video codec used for compression: " + this.h264Settings.codec);
+			log("h264Settings: Level used for H.264/AVC encoding: " + this.h264Settings.level);
+			log("h264Settings: Profile used for H.264/AVC encoding: " + this.h264Settings.profile);
+			log("h264Settings: Bandwidth: " + this.h264Settings.bandwidth.toString());
+			log("h264Settings: FPS: " + this.h264Settings.fps.toString());
+			log("h264Settings: Keyframe interval: " + this.h264Settings.keyFrameInterval.toString());
+			log("h264Settings: Quality: " + this.h264Settings.quality.toString());
+		}
+
 		private function initializeMicrophone():void
 		{
-			mic = Microphone.getMicrophone();
-			mic.setUseEchoSuppression(true);
-			mic.setSilenceLevel(0);
+			this.mic = Microphone.getMicrophone();
+			this.mic.setUseEchoSuppression(true);
+			this.mic.setSilenceLevel(0);
 
-			if (mic != null)
+			if (this.mic != null)
 			{
-				mic.addEventListener(StatusEvent.STATUS, onMicStatus);
+				this.mic.addEventListener(StatusEvent.STATUS, this.onMicStatus);
 
 				log("Microphone plugged in!");
 			} else {
@@ -107,7 +138,7 @@ package flashcam.ui
 			}
 		}
 
-		private static function log(text:String):void
+		public static function log(text:String):void
 		{
 			if (ExternalInterface.available) {
 				ExternalInterface.call("console.log", text);
@@ -119,33 +150,40 @@ package flashcam.ui
 		// video streaming
 		public function recordStart():void
 		{
-			log("record: start;");
+			log("Record: start");
 
-			stream = new NetStream(connection);
-			stream.attachAudio(mic);
-			stream.attachCamera(cam);
-			stream.publish("test","record");
+			this.stream = new NetStream(this.connection);
+			this.stream.client = this;
+			this.stream.videoStreamSettings = this.h264Settings;
+			this.stream.attachAudio(this.mic);
+			this.stream.attachCamera(this.cam);
+			this.stream.publish(this.video_url, "record");
 
-			video.attachCamera(cam);
+			this.video.attachCamera(this.cam);
+
+			log("Record using codec: " + this.stream.videoStreamSettings.codec);
 		}
 		public function recordStop():void
 		{
-			log("record: stop;");
+			log("Record: stop");
 
-			stream.close();
-			video.attachCamera(null);
+			this.stream.close();
+			this.video.attachCamera(null);
 		}
+
 		public function recordPlay():void
 		{
-			log("record: play;");
+			log("Record: play");
 
-			stream.play("test");
-			video.attachNetStream(stream);
+			this.stream = new NetStream(this.connection);
+			this.stream.client = this;
+			this.stream.play(this.video_url);
+			this.video.attachNetStream(this.stream);
 		}
 
 		public function getVideo():Video
 		{
-			return video;
+			return this.video;
 		}
 	}
 }

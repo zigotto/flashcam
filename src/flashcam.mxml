@@ -12,7 +12,6 @@
 	
 	<fx:Script>
 		<![CDATA[
-			// Imports
 			import flashcam.ui.Flashcam;
 
 			private var flcam:Flashcam = new Flashcam();
@@ -27,6 +26,18 @@
 			{
 				videoContainer.video = flcam.getVideo();
 				this.recordButton.enabled=true;
+			}
+
+			public function onBWCheck(... args):Number
+			{
+				return 0;
+			}
+
+			public function onBWDone(... args):void
+			{
+				if (args.length > 0) args = args[0];
+				Flashcam.log("Detected bandwidth: " + args + " Kbps.");
+				return;
 			}
 
 			/**
