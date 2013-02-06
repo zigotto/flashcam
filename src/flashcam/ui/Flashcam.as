@@ -1,8 +1,6 @@
 package flashcam.ui
 {
-
 	// Imports
-	import flash.system.Capabilities;
 	import flash.events.NetStatusEvent;
 	import flash.events.StatusEvent;
 	import flash.external.ExternalInterface;
@@ -14,13 +12,16 @@ package flashcam.ui
 	import flash.media.Video;
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
+	import flash.system.Capabilities;
 
-	//import mx.controls.Alert;
+	import mx.core.Application;
+	import mx.events.FlexEvent;
 
-	public class Flashcam
+	public class Flashcam extends Application
 	{	
+		// software version
 		private var version:String = "0.0.1";
-		
+
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
 		//private var rtmp_server:String = "rtmp://177.71.245.129:1935/vod";
@@ -28,37 +29,59 @@ package flashcam.ui
 		// components to show your video
 		private var video_url:String = "mp4:interview.f4v";
 		private var video:Video;
+		private var display:VideoContainer;
 		private var cam:Camera;
 		private var mic:Microphone;
 		private var stream:NetStream;
 		private var connection:NetConnection;
-
 		private var h264Settings:H264VideoStreamSettings;
 
 		public function Flashcam()
 		{
-			log("Flashcam (" + this.flashcamVersion() + ") created");
+			this.addEventListener(FlexEvent.CREATION_COMPLETE, this.handleComplete);
 		}
 
-		public function initialize():void
-		{
-			log("Flashcam initialized");
+		private function handleComplete( event : FlexEvent ) : void {
+			log("Flashcam (" + this.flashcamVersion() + ") created");
+			logFlashPlayerType();
 
+			init();
+		}
+		
+		private function createVideoDisplay():void
+		{
+			log('Creating video display');
+
+			this.display = new VideoContainer();
+			this.display.id = "flashContent";
+			this.display.width = this.width;
+			this.display.height = this.height;
+			this.addChild(display);
+		}
+
+		private function logFlashPlayerType():void
+		{
 			var flashPlayerType:String;
-			if (Capabilities.isDebugger)
-			{
-				flashPlayerType;
-			}
-			else
-			{
-				flashPlayerType;
-			}
-			log(flashPlayerType + " " + Capabilities.playerType + " (" + Capabilities.version + ")");
 			
+			if (Capabilities.isDebugger) flashPlayerType;
+			else flashPlayerType;
+
+			log(flashPlayerType + " " + Capabilities.playerType + " (" + Capabilities.version + ")");
+		}
+		
+		private function init():void
+		{
+			createVideoDisplay();
 			initializeCamera();
 			initializeMicrophone();
 			initializeConnection();
-			
+			createInterfaceCallbacks();
+
+			this.display.video = this.video;
+		}
+
+		private function createInterfaceCallbacks():void
+		{
 			log("Adding ExternalInterface");
 			ExternalInterface.addCallback("FC_version", this.flashcamVersion);
 		}
@@ -83,19 +106,18 @@ package flashcam.ui
 			if (this.cam != null)
 			{
 				this.configureH264();
-				
+
 				this.cam.setKeyFrameInterval(15);
 				this.cam.setQuality(0, 90);
 				this.cam.setLoopback(false);
-				
+				this.cam.addEventListener(StatusEvent.STATUS, this.statusHandler);
+				this.video.attachCamera(this.cam);
+
 				log("Camera: Bandwidth: " + this.cam.bandwidth.toString());
 				log("Camera: Current FPS: " + this.cam.currentFPS.toString());
 				log("Camera: FPS: " + this.cam.fps.toString());
 				log("Camera: Keyframe Interval: " + this.cam.keyFrameInterval.toString());
 				log("Camera: Quality: " + this.cam.quality.toString());
-
-				this.cam.addEventListener(StatusEvent.STATUS, this.statusHandler);
-				this.video.attachCamera(this.cam);
 
 				log("Camera plugged in!");
 				ExternalInterface.call("FC_showPrompt");
@@ -201,11 +223,18 @@ package flashcam.ui
 			this.video.attachNetStream(this.stream);
 		}
 
-		public function getVideo():Video
+		public function onBWCheck(... args):Number
 		{
-			return this.video;
+			return 0;
 		}
-		
+
+		public function onBWDone(... args):void
+		{
+			if (args.length > 0) args = args[0];
+			Flashcam.log("Detected bandwidth: " + args + " Kbps.");
+			return;
+		}
+
 		public function flashcamVersion():String
 		{
 			return this.version;

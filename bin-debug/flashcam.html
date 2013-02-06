@@ -56,7 +56,7 @@
             attributes.align = "middle";
             swfobject.embedSWF(
                 "flashcam.swf", "flashContent", 
-                "50%", "50%", 
+                "100%", "100%", 
                 swfVersionStr, xiSwfUrlStr, 
                 flashvars, params, attributes);
             // JavaScript enabled so display the flashContent div in case it is not replaced with a swf object.
@@ -83,14 +83,14 @@
         </div>
         
         <noscript>
-            <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="50%" height="50%" id="flashcam">
+            <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="100%" height="100%" id="flashcam">
                 <param name="movie" value="flashcam.swf" />
                 <param name="quality" value="high" />
                 <param name="bgcolor" value="#ffffff" />
                 <param name="allowScriptAccess" value="sameDomain" />
                 <param name="allowFullScreen" value="true" />
                 <!--[if !IE]>-->
-                <object type="application/x-shockwave-flash" data="flashcam.swf" width="50%" height="50%">
+                <object type="application/x-shockwave-flash" data="flashcam.swf" width="100%" height="100%">
                     <param name="quality" value="high" />
                     <param name="bgcolor" value="#ffffff" />
                     <param name="allowScriptAccess" value="sameDomain" />
@@ -117,7 +117,7 @@
 				showPrompt: function() { alert('A prompt will be shown, you must ACCEPT to continue.'); }
 			});
 			
-            swfobject.createCSS("#flashContent", "display:block;text-align:center;"); 
+            swfobject.createCSS("#flashContent", "display:block;");
 		</script>
    </body>
 </html>
