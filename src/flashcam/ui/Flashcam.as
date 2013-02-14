@@ -120,7 +120,8 @@ package flashcam.ui
 				log("Camera: Quality: " + this.cam.quality.toString());
 
 				log("Camera plugged in!");
-				ExternalInterface.call("FC_showPrompt");
+				
+				ExternalInterface.call("FC_onShow");
 			} else {
 				log("You don't have a camera!");
 			}

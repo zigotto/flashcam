@@ -15,7 +15,7 @@
 
 			// forward incoming flash movie calls to outgoing functions
 			$.flashcam.FC_onError = data.onError;
-			$.flashcam.FC_showPrompt = data.showPrompt;
+			$.flashcam.FC_onShow = data.onShow;
 
 			var newWidth = opts.width;
 			var newHeight = opts.height;
@@ -58,6 +58,6 @@ function FC_onError(errorId, errorMsg) {
 	$.flashcam.FC_onError(errorId, errorMsg);
 }
 
-function FC_showPrompt() {
-	$.flashcam.FC_showPrompt();
+function FC_onShow() {
+	$.flashcam.FC_onShow();
 }
