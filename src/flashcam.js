@@ -18,7 +18,7 @@
 			$.flashcam.FC_onShow = data.onShow;
 			$.flashcam.FC_onConnect = data.onConnect;
 			$.flashcam.FC_onDisconnect = data.onDisconnect;
-			$.flashcam.FC_onWebcamReady = data.FC_onWebcamReady;
+			$.flashcam.FC_onWebcamReady = data.onWebcamReady;
 
 			var newWidth = opts.width;
 			var newHeight = opts.height;
