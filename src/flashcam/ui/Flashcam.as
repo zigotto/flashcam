@@ -161,13 +161,21 @@ package flashcam.ui
 				log("You don't have a microphone!");
 			}
 		}
-		
+
 		private function statusHandler(event:StatusEvent):void
 		{
 			// This event gets dispatched when the user clicks the "Allow" or "Deny"
 			// button in the Flash Player Settings dialog box.
 			trace(event.code); // "Camera.Muted" or "Camera.Unmuted"
 			log(event.code);
+
+			if (event.code == "Camera.Muted")
+			{
+				showError(4, "Access to the webcam was denied");
+				return;
+			} else {
+				ExternalInterface.call("FC_onWebcamReady");
+			}
 		}
 		
 		private function netStatusHandler(event:NetStatusEvent):void
