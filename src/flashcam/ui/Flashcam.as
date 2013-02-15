@@ -175,9 +175,48 @@ package flashcam.ui
 			// This event gets dispatched whether the connection
 			// could be completed or not.
 			trace(event.info.code); // "NetConnection.Connect.Success" or "NetConnection.Connect.Failed"
-			log(event.info.code);
+			var info:* = event.info;
+
+			switch(info.code)
+			{
+				case "NetConnection.Connect.Success":
+				{
+					log("NetConnection connected with protocol " + this.connection.protocol + ", proxy type " + this.connection.proxyType + ", connected proxy type " + this.connection.connectedProxyType);
+					ExternalInterface.call("FC_onConnect");
+					break;
+				}
+				case "NetConnection.Connect.Closed":
+				{
+					ExternalInterface.call("FC_onDisconnect");
+					break;
+				}
+				case "NetConnection.Connect.Failed":
+				{
+					showError(8, "Could not connect to server, check your firewall");
+					break;
+				}
+				case "NetConnection.Connect.Rejected":
+				{
+					showError(1, "Unkown connection error");
+					break;
+				}
+				case "NetStream.Play.StreamNotFound":
+				{
+					showError(10, "The videostream was not found");
+					break;
+				}
+				case "NetStream.Buffer.Full":
+				{
+					showError(17, "Upload buffer full");
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			}
 		}
-		
+
 		private function onMicStatus(event:StatusEvent):void
 		{
 			if (event.code == "Microphone.Unmuted")
