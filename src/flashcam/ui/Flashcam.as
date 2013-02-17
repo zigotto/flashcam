@@ -20,14 +20,14 @@ package flashcam.ui
 	public class Flashcam extends Application
 	{	
 		// software version
-		private var version:String = "0.0.1";
+		private var version:String = "0.0.9";
 
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
 		//private var rtmp_server:String = "rtmp://177.71.245.129:1935/vod";
 
 		// components to show your video
-		private var video_url:String = "mp4:interview.f4v";
+		private var video_url:String = "mp4:interview.f4v"
 		private var video:Video;
 		private var display:VideoContainer;
 		private var cam:Camera;
@@ -35,6 +35,8 @@ package flashcam.ui
 		private var stream:NetStream;
 		private var connection:NetConnection;
 		private var h264Settings:H264VideoStreamSettings;
+
+		private var alreadyRecorded:Boolean = false;
 
 		public function Flashcam()
 		{
@@ -68,7 +70,7 @@ package flashcam.ui
 
 			log(flashPlayerType + " " + Capabilities.playerType + " (" + Capabilities.version + ")");
 		}
-		
+
 		private function init():void
 		{
 			createVideoDisplay();
@@ -240,18 +242,29 @@ package flashcam.ui
 		// video streaming
 		public function recordStart():void
 		{
-			log("Record: start");
+			if (!this.connection.connected)
+			{
+				showError(12, "Not connected to the server");
+			}
 
-			this.stream = new NetStream(this.connection);
-			this.stream.client = this;
-			this.stream.videoStreamSettings = this.h264Settings;
-			this.stream.attachAudio(this.mic);
-			this.stream.attachCamera(this.cam);
-			this.stream.publish(this.video_url, "record");
+			if (this.alreadyRecorded)
+			{
+				showError(7, "Already recorded this file");
+			} else {
+				log("Record: start");
 
-			this.video.attachCamera(this.cam);
+				this.alreadyRecorded = true;
+				this.stream = new NetStream(this.connection);
+				this.stream.client = this;
+				this.stream.videoStreamSettings = this.h264Settings;
+				this.stream.attachAudio(this.mic);
+				this.stream.attachCamera(this.cam);
+				this.stream.publish(this.video_url, "record");
 
-			log("Record using codec: " + this.stream.videoStreamSettings.codec);
+				this.video.attachCamera(this.cam);
+
+				log("Record using codec: " + this.stream.videoStreamSettings.codec);
+			}
 		}
 		public function recordStop():void
 		{
