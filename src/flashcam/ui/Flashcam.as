@@ -23,7 +23,7 @@ package flashcam.ui
 	public class Flashcam extends Application
 	{	
 		// software version
-		private var version:String = "0.0.11";
+		private var version:String = "0.0.12";
 
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
@@ -287,15 +287,11 @@ package flashcam.ui
 				this.stream.publish(this.getFileName(), "record");
 
 				this.video.attachCamera(this.cam);
-
-				log("Recording: " + this.getFileName());
 				log("Record using codec: " + this.stream.videoStreamSettings.codec);
 			}
 		}
 		public function recordStop():void
 		{
-			log("Record: stop");
-
 			this.stream.close();
 			this.video.attachCamera(null);
 		}
@@ -311,7 +307,6 @@ package flashcam.ui
 			this.stream.play(this.getFileName());
 
 			this.video.attachNetStream(this.stream);
-			log("Playing: " + this.getFileName());
 		}
 
 		public function onBWCheck(... args):Number
