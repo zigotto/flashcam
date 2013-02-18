@@ -50,6 +50,18 @@
 		return FC_display().FC_version();
 	}
 
+	$.flashcam.recordStart = function() {
+    FC_display().FC_recordStart();
+	}
+
+	$.flashcam.recordStop = function() {
+    FC_display().FC_recordStop();
+	}
+
+	$.flashcam.recordPlayback = function() {
+    FC_display().FC_recordPlayback();
+	}
+
 	// set javascript default values (flash default values are managed in the swf file)
 	$.fn.flashcam.defaults = {
 		width:320,

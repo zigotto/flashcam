@@ -21,7 +21,7 @@ package flashcam.ui
 	public class Flashcam extends Application
 	{	
 		// software version
-		private var version:String = "0.0.9";
+		private var version:String = "0.0.10";
 
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
@@ -98,6 +98,9 @@ package flashcam.ui
 		{
 			log("Adding ExternalInterface");
 			ExternalInterface.addCallback("FC_version", this.flashcamVersion);
+			ExternalInterface.addCallback("FC_recordStart", this.recordStart);
+			ExternalInterface.addCallback("FC_recordStop", this.recordStop);
+			ExternalInterface.addCallback("FC_recordPlayback", this.recordPlayback);
 		}
 
 		private function initializeConnection():void
@@ -296,9 +299,9 @@ package flashcam.ui
 			this.video.attachCamera(null);
 		}
 
-		public function recordPlay():void
+		public function recordPlayback():void
 		{
-			log("Record: play");
+			log("Record: playback");
 
 			this.stream = new NetStream(this.connection);
 			this.stream.client = this;
