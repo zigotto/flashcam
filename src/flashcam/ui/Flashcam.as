@@ -1,8 +1,13 @@
 package flashcam.ui
 {
 	// Imports
-	import flash.events.NetStatusEvent;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
 	import flash.events.StatusEvent;
+	import flash.events.IOErrorEvent;
+	import flash.events.NetStatusEvent;
+	import flash.events.AsyncErrorEvent
+	import flash.events.SecurityErrorEvent;
 	import flash.external.ExternalInterface;
 	import flash.media.Camera;
 	import flash.media.H264Level;
@@ -21,7 +26,7 @@ package flashcam.ui
 	public class Flashcam extends Application
 	{	
 		// software version
-		private var version:String = "0.0.10";
+		private var version:String = "0.0.11";
 
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
@@ -29,7 +34,6 @@ package flashcam.ui
 
 		// components to show your video
 		private var fileName:String = "";
-		private var video_url:String = "mp4:interview.f4v"
 		private var video:Video;
 		private var display:VideoContainer;
 		private var cam:Camera;
@@ -81,8 +85,6 @@ package flashcam.ui
 			initializeMicrophone();
 			initializeConnection();
 			createInterfaceCallbacks();
-
-			this.display.video = this.video;
 		}
 
 		private function retrieveFlashvars():void
@@ -107,10 +109,12 @@ package flashcam.ui
 		{
 			this.connection = new NetConnection();
 			this.connection.addEventListener(NetStatusEvent.NET_STATUS, this.netStatusHandler);
+			this.connection.addEventListener(AsyncErrorEvent.ASYNC_ERROR, this.netAsyncErrorEvent);
+			this.connection.addEventListener(IOErrorEvent.IO_ERROR, this.netIOErrorEvent);
+			this.connection.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.netSecurityErrorEvent);
+
 			this.connection.client = this;
 			this.connection.connect(this.rtmp_server);
-
-			log("Connected: " + this.connection.connected);
 		}
 
 		private function initializeCamera():void
@@ -130,14 +134,14 @@ package flashcam.ui
 				this.cam.addEventListener(StatusEvent.STATUS, this.statusHandler);
 				this.video.attachCamera(this.cam);
 
+				this.display.video = this.video;
+
 				log("Camera: Bandwidth: " + this.cam.bandwidth.toString());
 				log("Camera: Current FPS: " + this.cam.currentFPS.toString());
 				log("Camera: FPS: " + this.cam.fps.toString());
 				log("Camera: Keyframe Interval: " + this.cam.keyFrameInterval.toString());
 				log("Camera: Quality: " + this.cam.quality.toString());
 
-				log("Camera plugged in!");
-				
 				ExternalInterface.call("FC_onShow");
 			} else {
 				log("You don't have a camera!");
@@ -181,9 +185,7 @@ package flashcam.ui
 
 		private function statusHandler(event:StatusEvent):void
 		{
-			// This event gets dispatched when the user clicks the "Allow" or "Deny"
-			// button in the Flash Player Settings dialog box.
-			trace(event.code); // "Camera.Muted" or "Camera.Unmuted"
+			trace(event.code);
 			log(event.code);
 
 			if (event.code == "Camera.Muted")
@@ -197,9 +199,7 @@ package flashcam.ui
 		
 		private function netStatusHandler(event:NetStatusEvent):void
 		{
-			// This event gets dispatched whether the connection
-			// could be completed or not.
-			trace(event.info.code); // "NetConnection.Connect.Success" or "NetConnection.Connect.Failed"
+			trace(event.info.code);
 			var info:* = event.info;
 
 			switch(info.code)
@@ -230,16 +230,19 @@ package flashcam.ui
 					showError(10, "The videostream was not found");
 					break;
 				}
-				case "NetStream.Buffer.Full":
-				{
-					showError(17, "Upload buffer full");
-					break;
-				}
 				default:
 				{
 					break;
 				}
 			}
+		}
+
+		// When streaming video or doing playback using netstream you always have to setup onMetaData
+		// so this is used for both AUDIO and VIDEO
+		// Where we set the netstream's client to this, it allows the netstream to automatically call this function
+		public function onMetaData(info:Object):void
+		{
+			trace("playback called onMetaData");
 		}
 
 		private function onMicStatus(event:StatusEvent):void
@@ -261,7 +264,7 @@ package flashcam.ui
 			if (this.fileName) fileName = this.fileName;
 			else fileName = randomNumber().toString();
 
-			return fileName + ".f4v";
+			return fileName;
 		}
 
 		// video streaming
@@ -276,18 +279,20 @@ package flashcam.ui
 			{
 				showError(7, "Already recorded this file");
 			} else {
-				log("Record: start");
-
 				this.alreadyRecorded = true;
 				this.stream = new NetStream(this.connection);
+				this.stream.addEventListener(NetStatusEvent.NET_STATUS, this.netStatusHandler);
+				this.stream.addEventListener(AsyncErrorEvent.ASYNC_ERROR, this.netAsyncErrorEvent);
+				this.stream.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.netSecurityErrorEvent);
 				this.stream.client = this;
 				this.stream.videoStreamSettings = this.h264Settings;
 				this.stream.attachAudio(this.mic);
 				this.stream.attachCamera(this.cam);
-				this.stream.publish("mp4:" + this.getFileName(), "record");
+				this.stream.publish(this.getFileName(), "record");
 
 				this.video.attachCamera(this.cam);
 
+				log("Recording: " + this.getFileName());
 				log("Record using codec: " + this.stream.videoStreamSettings.codec);
 			}
 		}
@@ -301,12 +306,16 @@ package flashcam.ui
 
 		public function recordPlayback():void
 		{
-			log("Record: playback");
-
 			this.stream = new NetStream(this.connection);
+			this.stream.addEventListener(NetStatusEvent.NET_STATUS, this.netStatusHandler);
+			this.stream.addEventListener(AsyncErrorEvent.ASYNC_ERROR, this.netAsyncErrorEvent);
+			this.stream.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.netSecurityErrorEvent);
 			this.stream.client = this;
+			this.stream.videoStreamSettings = this.h264Settings;
 			this.stream.play(this.getFileName());
+
 			this.video.attachNetStream(this.stream);
+			log("Playing: " + this.getFileName());
 		}
 
 		public function onBWCheck(... args):Number
@@ -349,6 +358,24 @@ package flashcam.ui
 		private function randomNumber():Number
 		{
 			return Math.floor(Math.random() * (9999999 - 1000000)) + 1000000;
+		}
+
+		private function netAsyncErrorEvent(event:Event):void
+		{
+			showError(99, "AsyncErrorEvent: " + event);
+			return;
+		}
+
+		private function netSecurityErrorEvent(event:Event):void
+		{
+			showError(99, "netSecurityErrorEvent: " + event);
+			return;
+		}
+
+		private function netIOErrorEvent(event:Event):void
+		{
+			showError(99, "netnetIOErrorEvent: " + event);
+			return;
 		}
 	}
 }
