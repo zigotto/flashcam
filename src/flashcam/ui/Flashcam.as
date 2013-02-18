@@ -27,7 +27,6 @@ package flashcam.ui
 
 		// server address const
 		private var rtmp_server:String = "rtmp://localhost/vod";
-		//private var rtmp_server:String = "rtmp://177.71.245.129:1935/vod";
 
 		// components to show your video
 		private var fileName:String = "";
