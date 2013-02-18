@@ -1,8 +1,9 @@
 package flashcam.ui
 {
-	// Imports
+	import mx.core.Application;
+	import mx.core.FlexGlobals;
+	import mx.events.FlexEvent;
 	import flash.events.Event;
-	import flash.events.MouseEvent;
 	import flash.events.StatusEvent;
 	import flash.events.IOErrorEvent;
 	import flash.events.NetStatusEvent;
@@ -18,10 +19,6 @@ package flashcam.ui
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
 	import flash.system.Capabilities;
-
-	import mx.core.Application;
-	import mx.core.FlexGlobals;
-	import mx.events.FlexEvent;
 
 	public class Flashcam extends Application
 	{	
