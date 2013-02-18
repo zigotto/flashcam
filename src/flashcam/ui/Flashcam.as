@@ -15,6 +15,7 @@ package flashcam.ui
 	import flash.system.Capabilities;
 
 	import mx.core.Application;
+	import mx.core.FlexGlobals;
 	import mx.events.FlexEvent;
 
 	public class Flashcam extends Application
@@ -27,6 +28,7 @@ package flashcam.ui
 		//private var rtmp_server:String = "rtmp://177.71.245.129:1935/vod";
 
 		// components to show your video
+		private var fileName:String = "";
 		private var video_url:String = "mp4:interview.f4v"
 		private var video:Video;
 		private var display:VideoContainer;
@@ -73,6 +75,7 @@ package flashcam.ui
 
 		private function init():void
 		{
+			retrieveFlashvars();
 			createVideoDisplay();
 			initializeCamera();
 			initializeMicrophone();
@@ -80,6 +83,15 @@ package flashcam.ui
 			createInterfaceCallbacks();
 
 			this.display.video = this.video;
+		}
+
+		private function retrieveFlashvars():void
+		{
+			log("Retrieving flashvars");
+
+			var params:Object = Application(FlexGlobals.topLevelApplication).parameters;
+
+			if (params.fileName) this.fileName = params.fileName;
 		}
 
 		private function createInterfaceCallbacks():void
@@ -239,6 +251,16 @@ package flashcam.ui
 			}
 		}
 
+		private function getFileName():String
+		{
+			var fileName:String;
+
+			if (this.fileName) fileName = this.fileName;
+			else fileName = randomNumber().toString();
+
+			return fileName + ".f4v";
+		}
+
 		// video streaming
 		public function recordStart():void
 		{
@@ -259,7 +281,7 @@ package flashcam.ui
 				this.stream.videoStreamSettings = this.h264Settings;
 				this.stream.attachAudio(this.mic);
 				this.stream.attachCamera(this.cam);
-				this.stream.publish(this.video_url, "record");
+				this.stream.publish("mp4:" + this.getFileName(), "record");
 
 				this.video.attachCamera(this.cam);
 
@@ -280,7 +302,7 @@ package flashcam.ui
 
 			this.stream = new NetStream(this.connection);
 			this.stream.client = this;
-			this.stream.play(this.video_url);
+			this.stream.play(this.getFileName());
 			this.video.attachNetStream(this.stream);
 		}
 
@@ -319,6 +341,11 @@ package flashcam.ui
 				ExternalInterface.call("FC_onError", id, text);
 			}
 			return;
+		}
+
+		private function randomNumber():Number
+		{
+			return Math.floor(Math.random() * (9999999 - 1000000)) + 1000000;
 		}
 	}
 }
