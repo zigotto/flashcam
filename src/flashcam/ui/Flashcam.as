@@ -255,12 +255,8 @@ package flashcam.ui
 
 		private function getFileName():String
 		{
-			var fileName:String;
-
-			if (this.fileName) fileName = this.fileName;
-			else fileName = randomNumber().toString();
-
-			return fileName;
+			if (!this.fileName) this.fileName = randomNumber().toString();
+			return this.fileName;
 		}
 
 		// video streaming
