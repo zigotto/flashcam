@@ -113,6 +113,7 @@
         
         <script type="text/javascript">
 			$('#flashContent').flashcam({
+				useOldCodec: true,
 				onError: function(id, text) { alert("Error: " + text); },
         		onShow: function() { alert('A prompt will be shown, you must ACCEPT to continue.'); }
 			});

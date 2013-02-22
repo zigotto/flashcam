@@ -1,14 +1,11 @@
 package flashcam.ui
 {
-	import mx.core.Application;
-	import mx.core.FlexGlobals;
-	import mx.events.FlexEvent;
+	import flash.events.AsyncErrorEvent;
 	import flash.events.Event;
-	import flash.events.StatusEvent;
 	import flash.events.IOErrorEvent;
 	import flash.events.NetStatusEvent;
-	import flash.events.AsyncErrorEvent
 	import flash.events.SecurityErrorEvent;
+	import flash.events.StatusEvent;
 	import flash.external.ExternalInterface;
 	import flash.media.Camera;
 	import flash.media.H264Level;
@@ -18,9 +15,13 @@ package flashcam.ui
 	import flash.media.Video;
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
-	import flash.system.Capabilities;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
+	import flash.system.Capabilities;
+
+	import mx.core.Application;
+	import mx.core.FlexGlobals;
+	import mx.events.FlexEvent;
 
 	public class Flashcam extends Application
 	{	
@@ -40,6 +41,7 @@ package flashcam.ui
 		private var connection:NetConnection;
 		private var h264Settings:H264VideoStreamSettings;
 
+		private var useH264:Boolean = true;
 		private var alreadyRecorded:Boolean = false;
 
 		private var xmlLoader:URLLoader = new URLLoader();
@@ -61,7 +63,7 @@ package flashcam.ui
 		{
 			var config:XML = new XML(evt.target.data);
 			this.rtmp_server = config.server;
-			log(this.rtmp_server);
+
 			init();
 		}
 
@@ -103,6 +105,7 @@ package flashcam.ui
 			var params:Object = Application(FlexGlobals.topLevelApplication).parameters;
 
 			if (params.fileName) this.fileName = params.fileName;
+			if (params.useOldCodec) this.useH264 = false;
 		}
 
 		private function createInterfaceCallbacks():void
@@ -135,7 +138,7 @@ package flashcam.ui
 
 			if (this.cam != null)
 			{
-				this.configureH264();
+				if (this.useH264) this.h264Settings = this.configureH264();
 
 				this.cam.setKeyFrameInterval(15);
 				this.cam.setQuality(0, 90);
@@ -157,23 +160,26 @@ package flashcam.ui
 			}
 		}
 
-		private function configureH264():void
+		private function configureH264():H264VideoStreamSettings
 		{
 			log("Init H264 encoder");
 
-			this.h264Settings = new H264VideoStreamSettings();
-			this.h264Settings.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3);
-			this.h264Settings.setKeyFrameInterval(15);
-			this.h264Settings.setQuality(0, 90);
-			this.h264Settings.setMode(this.video.videoWidth, this.video.videoHeight, -1);
+			var h264:H264VideoStreamSettings = new H264VideoStreamSettings();
 			
-			log("h264Settings: Video codec used for compression: " + this.h264Settings.codec);
-			log("h264Settings: Level used for H.264/AVC encoding: " + this.h264Settings.level);
-			log("h264Settings: Profile used for H.264/AVC encoding: " + this.h264Settings.profile);
-			log("h264Settings: Bandwidth: " + this.h264Settings.bandwidth.toString());
-			log("h264Settings: FPS: " + this.h264Settings.fps.toString());
-			log("h264Settings: Keyframe interval: " + this.h264Settings.keyFrameInterval.toString());
-			log("h264Settings: Quality: " + this.h264Settings.quality.toString());
+			h264.setProfileLevel(H264Profile.BASELINE, H264Level.LEVEL_3);
+			h264.setKeyFrameInterval(15);
+			h264.setQuality(0, 90);
+			h264.setMode(this.video.videoWidth, this.video.videoHeight, -1);
+
+			log("h264Settings: Video codec used for compression: " + h264.codec);
+			log("h264Settings: Level used for H.264/AVC encoding: " + h264.level);
+			log("h264Settings: Profile used for H.264/AVC encoding: " + h264.profile);
+			log("h264Settings: Bandwidth: " + h264.bandwidth.toString());
+			log("h264Settings: FPS: " + h264.fps.toString());
+			log("h264Settings: Keyframe interval: " + h264.keyFrameInterval.toString());
+			log("h264Settings: Quality: " + h264.quality.toString());
+
+			return h264;
 		}
 
 		private function initializeMicrophone():void
@@ -290,7 +296,9 @@ package flashcam.ui
 				this.stream.addEventListener(AsyncErrorEvent.ASYNC_ERROR, this.netAsyncErrorEvent);
 				this.stream.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.netSecurityErrorEvent);
 				this.stream.client = this;
-				this.stream.videoStreamSettings = this.h264Settings;
+
+				if (this.useH264) this.stream.videoStreamSettings = this.h264Settings;
+
 				this.stream.attachAudio(this.mic);
 				this.stream.attachCamera(this.cam);
 				this.stream.publish(this.getFileName(), "record");
