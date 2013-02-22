@@ -19,6 +19,8 @@ package flashcam.ui
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
 	import flash.system.Capabilities;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
 
 	public class Flashcam extends Application
 	{	
@@ -26,7 +28,7 @@ package flashcam.ui
 		private var version:String = "0.0.12";
 
 		// server address const
-		private var rtmp_server:String = "rtmp://localhost/vod";
+		private var rtmp_server:String = "";
 
 		// components to show your video
 		private var fileName:String = "";
@@ -40,6 +42,8 @@ package flashcam.ui
 
 		private var alreadyRecorded:Boolean = false;
 
+		private var xmlLoader:URLLoader = new URLLoader();
+
 		public function Flashcam()
 		{
 			this.addEventListener(FlexEvent.CREATION_COMPLETE, this.handleComplete);
@@ -49,9 +53,18 @@ package flashcam.ui
 			log("Flashcam (" + this.flashcamVersion() + ") created");
 			logFlashPlayerType();
 
+			xmlLoader.addEventListener(Event.COMPLETE, loadXML, false, 0, true);
+			xmlLoader.load(new URLRequest("config.xml"));
+		}
+
+		private function loadXML(evt:Event):void
+		{
+			var config:XML = new XML(evt.target.data);
+			this.rtmp_server = config.server;
+			log(this.rtmp_server);
 			init();
 		}
-		
+
 		private function createVideoDisplay():void
 		{
 			log('Creating video display');
