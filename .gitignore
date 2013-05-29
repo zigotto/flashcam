@@ -2,3 +2,4 @@
 bin-debug/
 bin-release/
 export.sh
+src/config.xml
