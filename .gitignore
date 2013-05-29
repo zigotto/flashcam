@@ -1,5 +1,5 @@
 .DS_Store
 bin-debug/
 bin-release/
-export.sh
 src/config.xml
+export.sh
