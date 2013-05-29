@@ -14,11 +14,12 @@
 			$('#'+opts.id).html(opts.noFlashFound); // inject no flash found message
 
 			// forward incoming flash movie calls to outgoing functions
-			$.flashcam.FC_onError = data.onError;
-			$.flashcam.FC_onShow = data.onShow;
 			$.flashcam.FC_onConnect = data.onConnect;
 			$.flashcam.FC_onDisconnect = data.onDisconnect;
+			$.flashcam.FC_onError = data.onError;
+			$.flashcam.FC_onShow = data.onShow;
 			$.flashcam.FC_onWebcamReady = data.onWebcamReady;
+      $.flashcam.FC_onTimeLeftChange = data.onTimeLeftChange;
 
 			var newWidth = opts.width;
 			var newHeight = opts.height;
@@ -91,4 +92,8 @@ function FC_onDisconnect() {
 
 function FC_onWebcamReady() {
   $.flashcam.FC_onWebcamReady()
+}
+
+function FC_onTimeLeftChange() {
+	$.flashcam.FC_onTimeLeftChange();
 }

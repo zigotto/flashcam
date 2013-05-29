@@ -48,8 +48,8 @@ package flashcam.ui
 
 		private var xmlLoader:URLLoader = new URLLoader();
 
-		private var stopTimer:Timer;
-		private var maxRecordingTime:int = 10; // minutes
+		private var recordingTimer:Timer;
+		private var maximumTime:int = 600; // default: 600 seconds == 10 minutes
 
 		public function Flashcam()
 		{
@@ -101,7 +101,6 @@ package flashcam.ui
 			initializeMicrophone();
 			initializeConnection();
 			createInterfaceCallbacks();
-			configureStopTimer();
 		}
 
 		private function retrieveFlashvars():void
@@ -112,22 +111,14 @@ package flashcam.ui
 
 			if (params.fileName) this.fileName = params.fileName;
 			if (params.useOldCodec) this.useH264 = false;
-			if (params.maxRecordingTime) this.maxRecordingTime = params.maxRecordingTime;
-		}
 
-		private function configureStopTimer():void
-		{
-			stopTimer = new Timer(this.maxRecordingTime * 60 * 1000, 1);
-			stopTimer.addEventListener(TimerEvent.TIMER, stopRecordingTimer);
-		}
+			if (params.maxRecordingTime) {
+				this.maximumTime = params.maxRecordingTime;
 
-		private function stopRecordingTimer(e:TimerEvent):void
-		{
-			try
-			{
-				this.recordStop();
-			} catch(e:*) {
-				log("Auto stop recording.");
+				// minimum time = 5s
+				if (this.maximumTime < 5) this.maximumTime = 5;
+				// maximum time = 1h
+				if (this.maximumTime > 60 * 60) this.maximumTime = 60 * 60;
 			}
 		}
 
@@ -327,7 +318,11 @@ package flashcam.ui
 				this.stream.publish(this.getFileName(), "record");
 
 				this.video.attachCamera(this.cam);
-				stopTimer.start();
+
+				this.recordingTimer = new Timer(1000, this.maximumTime);
+				this.recordingTimer.addEventListener(TimerEvent.TIMER, this.timerTimeLeft);
+				this.recordingTimer.addEventListener(TimerEvent.TIMER_COMPLETE, this.timerTimedOut);
+				this.recordingTimer.start();
 
 				log("Record using codec: " + this.stream.videoStreamSettings.codec);
 			}
@@ -336,6 +331,7 @@ package flashcam.ui
 		{
 			this.stream.close();
 			this.video.attachCamera(null);
+			this.recordingTimer.stop();
 		}
 
 		public function recordPlayback():void
@@ -349,6 +345,39 @@ package flashcam.ui
 			this.stream.play(this.getFileName());
 
 			this.video.attachNetStream(this.stream);
+		}
+
+		private function timerTimedOut(e:TimerEvent):void
+		{
+			try
+			{
+				this.recordStop();
+			} catch(e:*) {
+				log("Auto stop recording.");
+			}
+		}
+
+		private function timerTimeLeft(e:TimerEvent):void
+		{
+			var timeLeft:int = this.maximumTime * 1000 - e.currentTarget.currentCount * e.currentTarget.delay;
+			ExternalInterface.call("FC_onTimeLeftChange", this.msToMMSS(timeLeft));
+		}
+
+		private function msToMMSS(time:Number) : String
+		{
+			var milliseconds:* = time / 1000;
+			var minutes:* = String(Math.floor(milliseconds / 60));
+			var seconds:* = String(Math.round(milliseconds - Number(minutes) * 60));
+
+			if (minutes.length < 2)
+			{
+				minutes = "0" + minutes;
+			}
+			if (seconds.length < 2)
+			{
+				seconds = "0" + seconds;
+			}
+			return minutes + ":" + seconds;
 		}
 
 		public function onBWCheck(... args):Number
