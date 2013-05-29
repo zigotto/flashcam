@@ -28,7 +28,7 @@ package flashcam.ui
 	public class Flashcam extends Application
 	{	
 		// software version
-		private var version:String = "0.1.0";
+		private var version:String = "0.1.2";
 
 		// server address const
 		private var rtmp_server:String = "";
