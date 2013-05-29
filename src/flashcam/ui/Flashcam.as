@@ -6,6 +6,7 @@ package flashcam.ui
 	import flash.events.NetStatusEvent;
 	import flash.events.SecurityErrorEvent;
 	import flash.events.StatusEvent;
+	import flash.events.TimerEvent;
 	import flash.external.ExternalInterface;
 	import flash.media.Camera;
 	import flash.media.H264Level;
@@ -18,6 +19,7 @@ package flashcam.ui
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.system.Capabilities;
+	import flash.utils.Timer;
 
 	import mx.core.Application;
 	import mx.core.FlexGlobals;
@@ -45,6 +47,9 @@ package flashcam.ui
 		private var alreadyRecorded:Boolean = false;
 
 		private var xmlLoader:URLLoader = new URLLoader();
+
+		private var stopTimer:Timer;
+		private var maxRecordingTime:int = 10; // minutes
 
 		public function Flashcam()
 		{
@@ -96,6 +101,7 @@ package flashcam.ui
 			initializeMicrophone();
 			initializeConnection();
 			createInterfaceCallbacks();
+			configureStopTimer();
 		}
 
 		private function retrieveFlashvars():void
@@ -106,6 +112,23 @@ package flashcam.ui
 
 			if (params.fileName) this.fileName = params.fileName;
 			if (params.useOldCodec) this.useH264 = false;
+			if (params.maxRecordingTime) this.maxRecordingTime = params.maxRecordingTime;
+		}
+
+		private function configureStopTimer():void
+		{
+			stopTimer = new Timer(this.maxRecordingTime * 60 * 1000, 1);
+			stopTimer.addEventListener(TimerEvent.TIMER, stopRecordingTimer);
+		}
+
+		private function stopRecordingTimer(e:TimerEvent):void
+		{
+			try
+			{
+				this.recordStop();
+			} catch(e:*) {
+				log("Auto stop recording.");
+			}
 		}
 
 		private function createInterfaceCallbacks():void
@@ -304,6 +327,8 @@ package flashcam.ui
 				this.stream.publish(this.getFileName(), "record");
 
 				this.video.attachCamera(this.cam);
+				stopTimer.start();
+
 				log("Record using codec: " + this.stream.videoStreamSettings.codec);
 			}
 		}
