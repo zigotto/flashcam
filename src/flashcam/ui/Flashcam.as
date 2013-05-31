@@ -28,7 +28,7 @@ package flashcam.ui
 	public class Flashcam extends Application
 	{	
 		// software version
-		private var version:String = "0.1.2";
+		private var version:String = "0.1.5";
 
 		// server address const
 		private var rtmp_server:String = "";
@@ -61,7 +61,7 @@ package flashcam.ui
 			logFlashPlayerType();
 
 			xmlLoader.addEventListener(Event.COMPLETE, loadXML, false, 0, true);
-			xmlLoader.load(new URLRequest("config.xml"));
+			xmlLoader.load(new URLRequest("/assets/config.xml"));
 		}
 
 		private function loadXML(evt:Event):void
